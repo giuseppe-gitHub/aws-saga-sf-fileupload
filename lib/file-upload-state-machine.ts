@@ -23,26 +23,26 @@ export class FileUploadStateMachine extends cdk.Construct
             autoDeleteObjects: true
         });
 
-        const storeFileLambda = this.createLambdaBucket(this, 'StoreFileLambda', 'store-file.handler', filesStore.bucketName);
+        const storeFileLambda = this.createLambdaBucket(this, 'StoreFileLambda', 'storeFile.handler', filesStore.bucketName);
         filesStore.grantReadWrite(storeFileLambda);
 
-        const deleteFileLambda = this.createLambdaBucket(this, 'DeleteFileLambda', 'delete-stored-file.handler', filesStore.bucketName);
+        const deleteFileLambda = this.createLambdaBucket(this, 'DeleteFileLambda', 'deleteStoredFile.handler', filesStore.bucketName);
         filesStore.grantRead(deleteFileLambda);
         filesStore.grantDelete(deleteFileLambda);
 
-        const saveFileInfoLambda = this.createLambdaTable(this, 'SaveFileInfoLambda', 'save-file-info.handler', filesTable);
-        const deleteFileInfoLambda = this.createLambdaTable(this, 'DeleteFileInfoLambda', 'delete-db-items.handler', filesTable);
+        const saveFileInfoLambda = this.createLambdaTable(this, 'SaveFileInfoLambda', 'saveFileInfo.handler', filesTable);
+        const deleteFileInfoLambda = this.createLambdaTable(this, 'DeleteFileInfoLambda', 'deleteFileInfo.handler', filesTable);
 
 
 
-        const reservationFailed = new sfn.Fail(this, "Upload-Failed");
-        const reservationSucceeded = new sfn.Succeed(this, "Upload-succes");
+        const uploadFailed = new sfn.Fail(this, "Upload-Failed");
+        const uploadSucceeded = new sfn.Succeed(this, "Upload-succes");
 
         const deleteFileInfoStep = new tasks.LambdaInvoke(this, 'DeleteFileInfoStep', {
             lambdaFunction: deleteFileInfoLambda,
             resultPath: '$.deleteFileInfoOutput'
         })
-            .next(reservationFailed);
+            .next(uploadFailed);
 
         const deleteFileStep = new tasks.LambdaInvoke(this, 'DeleteFileStep', {
             lambdaFunction: deleteFileLambda,
@@ -68,7 +68,8 @@ export class FileUploadStateMachine extends cdk.Construct
 
         const stateMachineDef = sfn.Chain
         .start(storeFileStep)
-        .next(saveFileInfoStep);
+        .next(saveFileInfoStep)
+        .next(uploadSucceeded);
 
         
       let saga = new sfn.StateMachine(this, "SaveFileStateMachine", {
@@ -80,7 +81,7 @@ export class FileUploadStateMachine extends cdk.Construct
     const sagaLambda = new lambda.Function(this, 'SagaLambdaHandler', {
         runtime: lambda.Runtime.NODEJS_12_X,
         code: lambda.Code.fromAsset('lambdas'),
-        handler: 'saga-lambda.handler',
+        handler: 'sagaLambda.handler',
         environment: {
           statemachine_arn: saga.stateMachineArn
         }
