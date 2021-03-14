@@ -2,6 +2,7 @@ import * as cdk from "@aws-cdk/core";
 import * as dynamodb from "@aws-cdk/aws-dynamodb";
 import * as s3 from "@aws-cdk/aws-s3";
 import * as lambda from "@aws-cdk/aws-lambda";
+import * as lambdaNode from '@aws-cdk/aws-lambda-nodejs';
 import * as sfn from "@aws-cdk/aws-stepfunctions";
 import * as tasks from "@aws-cdk/aws-stepfunctions-tasks";
 import * as apigateway from "@aws-cdk/aws-apigateway";
@@ -78,9 +79,9 @@ export class FileUploadStateMachine extends cdk.Construct
 
         // AWS Lambda resource to connect to our API Gateway to kick
     // off our step function
-    const sagaLambda = new lambda.Function(this, 'SagaLambdaHandler', {
+    const sagaLambda = new lambdaNode.NodejsFunction(this, 'SagaLambdaHandler', {
         runtime: lambda.Runtime.NODEJS_12_X,
-        code: lambda.Code.fromAsset('lambdas'),
+        entry: __dirname + '/../lambdas/sagaLambda.ts',
         handler: 'sagaLambda.handler',
         environment: {
           statemachine_arn: saga.stateMachineArn
