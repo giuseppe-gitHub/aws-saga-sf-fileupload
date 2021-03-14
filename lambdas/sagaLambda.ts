@@ -34,7 +34,7 @@ const handler: Handler<APIGatewayProxyEvent> = (event: APIGatewayProxyEvent, con
             console.log(err);
             const response = {
                 statusCode: 500,
-                body: err
+                body: JSON.stringify(err)
             };
             callback(null, response);
         } else {
@@ -42,7 +42,7 @@ const handler: Handler<APIGatewayProxyEvent> = (event: APIGatewayProxyEvent, con
             console.log(data);
             const response = {
                 statusCode: 200,
-                body: data
+                body: JSON.stringify(data)
             };
             callback(null, response);
         }

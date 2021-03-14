@@ -82,7 +82,7 @@ export class FileUploadStateMachine extends cdk.Construct
     const sagaLambda = new lambdaNode.NodejsFunction(this, 'SagaLambdaHandler', {
         runtime: lambda.Runtime.NODEJS_12_X,
         entry: __dirname + '/../lambdas/sagaLambda.ts',
-        handler: 'sagaLambda.handler',
+        handler: 'handler',
         environment: {
           statemachine_arn: saga.stateMachineArn
         }
